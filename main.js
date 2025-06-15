@@ -9,8 +9,34 @@ class PluginStatsModal extends Modal {
         this.plugin = plugin;
     }
 
+    drawPie(canvas, enabledCount, disabledCount) {
+        const ctx = canvas.getContext('2d');
+        const total = enabledCount + disabledCount;
+        const enabledAngle = (enabledCount / total) * Math.PI * 2;
+        const disabledAngle = (disabledCount / total) * Math.PI * 2;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Enabled slice
+        ctx.fillStyle = '#4caf50';
+        ctx.beginPath();
+        ctx.moveTo(100, 100);
+        ctx.arc(100, 100, 80, 0, enabledAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        // Disabled slice
+        ctx.fillStyle = '#f44336';
+        ctx.beginPath();
+        ctx.moveTo(100, 100);
+        ctx.arc(100, 100, 80, enabledAngle, enabledAngle + disabledAngle);
+        ctx.closePath();
+        ctx.fill();
+    }
+
     onOpen() {
-        const { contentEl } = this;
+        const { contentEl, modalEl } = this;
+        modalEl.addClass('plugin-stats-modal');
         contentEl.empty();
         contentEl.createEl('h2', { text: 'Estadísticas de Plugins' });
 
@@ -18,6 +44,13 @@ class PluginStatsModal extends Modal {
         const pluginIDs = Object.keys(manifests);
         const total = pluginIDs.length;
         const enabled = Array.from(this.app.plugins.enabledPlugins || []);
+
+        // Pie chart
+        const chartWrapper = contentEl.createDiv({ cls: 'plugin-stats-chart-wrapper' });
+        const canvas = chartWrapper.createEl('canvas', { cls: 'plugin-stats-chart' });
+        canvas.width = 200;
+        canvas.height = 200;
+        this.drawPie(canvas, enabled.length, total - enabled.length);
 
         contentEl.createEl('p', { text: `Plugins instalados: ${total}` });
         contentEl.createEl('p', { text: `Plugins activos: ${enabled.length}` });
@@ -39,6 +72,7 @@ class PluginStatsModal extends Modal {
     }
 
     onClose() {
+        this.modalEl.removeClass('plugin-stats-modal');
         this.contentEl.empty();
     }
 }
